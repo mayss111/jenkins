@@ -1,49 +1,24 @@
-pipeline {     agent any
---ou--     agent {         node {
-            label 'build'
-        }
-    }
+pipeline {
+    agent any
+
     tools {
+        jdk 'JAVA_HOME'
         maven 'M2_HOME'
     }
-    options {
-        --Timeout counter starts after agent is allocated--         timeout(time: 1, unit: 'SECONDS')
-    }
-    environment {
-        APP_ENV  = "DEV"
-    }
-    stages {
-         stage('GIT') {
-             steps {
-                 git branch: 'master',
-                     url: 'https://github.com/hwafa/timesheetproject.git'
-             }
-         }
-         stage ('Compile Stage') {
-             steps {
-                 sh 'mvn clean compile'
-             }
-         }
 
-         stage('Code Checkout') {
+    stages {
+
+        stage('GIT') {
             steps {
                 git branch: 'master',
-                url: 'https://github.com/hwafa/atelier-jenkins.git',                 credentialsId:  'jenkins-example-github-pat'
+                    url: 'https://github.com/hwafa/timesheetproject.git'
             }
         }
-        stage('Code Build') {             steps {                  sh 'mvn install -Dmaven.test.skip=true'
-            }
-        }
-    }
 
-       post {
-          always {
-                 echo "======always======"
-          }
-          success {
-                 echo "=====pipeline executed successfully ====="
-          }           failure {
-                 echo "======pipeline execution failed======"
-          }
-       }
+        stage('Compile Stage') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
     }
+}
