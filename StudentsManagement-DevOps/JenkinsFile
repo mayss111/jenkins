@@ -19,6 +19,11 @@ pipeline {     agent any
                      url: 'https://github.com/hwafa/timesheetproject.git'
              }
          }
+         stage ('Compile Stage') {
+             steps {
+                 sh 'mvn clean compile'
+             }
+         }
 
          stage('Code Checkout') {
             steps {
