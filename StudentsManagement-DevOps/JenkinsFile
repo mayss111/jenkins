@@ -2,22 +2,38 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JAVA_HOME'
-        maven 'M2_HOME'
+        maven 'MAVEN_3'   // Le nom que tu as configuré dans Jenkins
     }
 
     stages {
 
-        stage('GIT') {
+        stage('Checkout') {
             steps {
-                git branch: 'master',
-                    url: 'https://github.com/hwafa/timesheetproject.git'
+                checkout scm
             }
         }
 
-        stage('Compile Stage') {
+        stage('Build') {
             steps {
-                sh 'mvn clean compile'
+                dir('StudentsManagement-DevOps') {
+                    sh 'mvn clean install'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('StudentsManagement-DevOps') {
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                dir('StudentsManagement-DevOps') {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
             }
         }
     }
