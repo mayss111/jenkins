@@ -1,19 +1,16 @@
 pipeline {
     agent any
 
-    triggers {
-        githubPush()
-    }
-
     environment {
-        DOCKER_IMAGE = "mayss111/alpine"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        IMAGE_NAME = "mayss111/alpine"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/mayss111/jenkins.git', branch: 'main'
+                git branch: 'main', url: 'https://github.com/mayss111/jenkins.git'
             }
         }
 
@@ -29,7 +26,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        docker build -t ${DOCKER_IMAGE}:latest StudentsManagement-DevOps
+                       docker build -t ${IMAGE_NAME}:latest StudentsManagement-DevOps
                     """
                 }
             }
@@ -37,10 +34,10 @@ pipeline {
 
         stage('Docker Login & Push') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                script {
                     sh """
-                        echo "$PASS" | docker login -u "$USER" --password-stdin
-                        docker push ${DOCKER_IMAGE}:latest
+                       echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
+                       docker push ${IMAGE_NAME}:latest
                     """
                 }
             }
