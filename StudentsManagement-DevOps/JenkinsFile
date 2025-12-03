@@ -31,7 +31,7 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Push') {
+     /*   stage('Docker Build & Push') {
             when {
                 expression { currentBuild.result != 'FAILURE' } // ne push que si Maven a réussi
             }
@@ -45,7 +45,7 @@ pipeline {
             }
         }
     }
-
+*/
     post {
         always {
             echo "Pipeline terminée avec le status: ${currentBuild.result}"
