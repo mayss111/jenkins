@@ -1,30 +1,54 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-creds-id' // ID des credentials Docker dans Jenkins
+        DOCKER_IMAGE = 'mayss111/studentsmanagement:latest'
+    }
+
+    triggers {
+        githubPush() // déclenche automatiquement à chaque push
+    }
+
     stages {
         stage('Checkout SCM') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/mayss111/jenkins.git'
             }
         }
 
         stage('Build Maven') {
             steps {
-                sh 'mvn clean package'
-            }
-        }
-
-        stage('Docker Build & Push') {
-            steps {
                 script {
-                    docker.build("mayss111/studentsmanagement:latest")
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        docker.image("mayss111/studentsmanagement:latest").push()
+                    try {
+                        sh 'mvn clean package'
+                    } catch (err) {
+                        echo "Maven build failed: ${err}"
+                        currentBuild.result = 'FAILURE'
+                        // continue pour Docker malgré l'échec
                     }
                 }
             }
         }
-    } // <-- ici ferme la section stages
-} // <-- ici ferme le pipeline
 
+        stage('Docker Build & Push') {
+            when {
+                expression { currentBuild.result != 'FAILURE' } // ne push que si Maven a réussi
+            }
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
+                        def image = docker.build("${DOCKER_IMAGE}")
+                        image.push()
+                    }
+                }
+            }
+        }
+    }
 
+    post {
+        always {
+            echo "Pipeline terminée avec le status: ${currentBuild.result}"
+        }
+    }
+}
