@@ -1,40 +1,28 @@
 pipeline {
     agent any
-
-    tools {
-        maven 'MAVEN_3'   // Le nom que tu as configuré dans Jenkins
-    }
-
     stages {
-
-        stage('Checkout') {
+        stage('Clone') {
             steps {
-                checkout scm
+                git 'https://github.com/mayss111/jenkins/tree/main/StudentsManagement-DevOps'
             }
         }
-
-        stage('Build') {
+        stage('Build Maven') {
             steps {
-                dir('StudentsManagement-DevOps') {
-                    sh 'mvn clean install'
+                sh 'mvn clean package'
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    docker.build('mayss111/alpine:latest').push()
                 }
             }
         }
-
-        stage('Test') {
-            steps {
-                dir('StudentsManagement-DevOps') {
-                    sh 'mvn test'
-                }
-            }
-        }
-
-        stage('Archive Artifacts') {
-            steps {
-                dir('StudentsManagement-DevOps') {
-                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-                }
-            }
+    }
+    post {
+        always {
+            echo 'Pipeline terminée.'
         }
     }
 }
+
