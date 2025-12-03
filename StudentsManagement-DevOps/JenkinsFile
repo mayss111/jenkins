@@ -3,8 +3,8 @@ pipeline {
     stages {
         stage('Build Maven') {
             steps {
-            dir('StudentsManagement-DevOps')
-                sh 'mvn clean package'
+            dir('StudentsManagement-DevOps'){
+                sh 'mvn clean package'}
             }
         }
         stage('Docker Build & Push') {
