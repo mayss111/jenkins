@@ -24,7 +24,7 @@ pipeline {
                 }
             }
         }
-    } // <-- ici ferme la section stages
-} // <-- ici ferme le pipeline
+    }
+}
 
 
