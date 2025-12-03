@@ -2,37 +2,75 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds-id' // ID des credentials Docker dans Jenkins
-        DOCKER_IMAGE = 'mayss111/studentsmanagement:latest'
+        REGISTRY = "docker.io"                // Ton registre Docker (Docker Hub)
+        IMAGE_NAME = "mayss111/studentsmanagement" // Nom de l'image
+        IMAGE_TAG = "latest"                  // Tag de l'image
+        DOCKER_CREDENTIALS = 'dockerhub-creds-id' // ID des credentials Jenkins pour Docker
     }
 
     triggers {
-        githubPush() // déclenche automatiquement à chaque push
+        // Fallback : vérifie chaque minute au cas où
+        pollSCM('* * * * *')
     }
 
     stages {
-        stage('Checkout SCM') {
+
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/mayss111/jenkins.git'
+                echo "🔄 Récupération du dépôt Git..."
+                checkout scm
+            }
+        }
+
+        stage('Clean Workspace') {
+            steps {
+                echo "🧹 Nettoyage du workspace..."
+                sh 'git clean -fdx'
             }
         }
 
         stage('Build Maven') {
             steps {
-                script {
-                    try {
-                        dir('StudentsManagement-DevOps') {
-                            sh 'mvn clean package'
-                        }
-                    } catch (err) {
-                        echo "Maven build failed: ${err}"
-
-                        currentBuild.result = 'FAILURE'
-                    }
-                }
-
+                echo "📦 Construction du projet Maven..."
+                sh 'mvn clean package -DskipTests'
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "🐳 Construction de l’image Docker..."
+                sh """
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                """
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo "🚀 Push sur Docker Hub..."
+                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS,
+                                                 usernameVariable: 'DOCKER_USER',
+                                                 passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker logout ${REGISTRY}
+                    """
+                }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline terminé avec succès !"
+        }
+        failure {
+            echo "❌ Le pipeline a échoué."
+        }
+    }
+}
 
 
 
