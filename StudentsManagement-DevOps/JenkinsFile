@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                git 'https://github.com/mayss111/jenkins/tree/main/StudentsManagement-DevOps'
+                git 'https://github.com/mayss111/jenkins'
             }
         }
         stage('Build Maven') {
