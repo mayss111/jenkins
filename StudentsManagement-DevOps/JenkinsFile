@@ -51,6 +51,9 @@ pipeline {
             echo "Pipeline terminée avec le status: ${currentBuild.result}"
         }
     }
+
+
+
 }
 
 
