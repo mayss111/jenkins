@@ -1,12 +1,19 @@
 pipeline {
     agent any
+
     stages {
-        stage('Build Maven') {
+        stage('Checkout SCM') {
             steps {
-            dir('StudentsManagement-DevOps'){
-                sh 'mvn clean package'}
+                checkout scm
             }
         }
+
+        stage('Build Maven') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
         stage('Docker Build & Push') {
             steps {
                 script {
@@ -17,12 +24,7 @@ pipeline {
                 }
             }
         }
-
-    post {
-        always {
-            echo 'Pipeline terminée.'
-        }
-    }
-}
+    } // <-- ici ferme la section stages
+} // <-- ici ferme le pipeline
 
 
