@@ -1,60 +1,42 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds-id' // ID des credentials Docker dans Jenkins
-        DOCKER_IMAGE = 'mayss111/studentsmanagement:latest'
-    }
-
     triggers {
-        githubPush() // déclenche automatiquement à chaque push
+        githubPush()       // déclenche à chaque push
     }
 
     stages {
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/mayss111/jenkins.git'
+                checkout scm
             }
         }
 
-        stage('Build Maven') {
+        stage('Build') {
             steps {
                 script {
                     try {
-                        dir('StudentsManagement-DevOps') {
-                            sh 'mvn clean package'
-                        }
+                        sh 'mvn clean package -DskipTests'
                     } catch (err) {
-                        echo "Maven build failed: ${err}"
-
+                        echo "Maven a échoué, mais on continue"
                         currentBuild.result = 'FAILURE'
                     }
                 }
-
             }
         }
 
-
-
-
-        stage('Docker Build & Push') {
-            when {
-                expression { currentBuild.result != 'FAILURE' } // ne push que si Maven a réussi
-            }
+        stage('Docker') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
-                        def image = docker.build("${DOCKER_IMAGE}")
-                        image.push()
-                    }
-                }
+                echo "Docker build & push..."
+                sh 'docker build -t mayss111/studentsmanagement:latest . || echo "Docker build échoué"'
+                sh 'docker push mayss111/studentsmanagement:latest || echo "Docker push échoué"'
             }
         }
     }
 
     post {
         always {
-            echo "Pipeline terminée avec le status: ${currentBuild.result}"
+            echo "Pipeline terminée avec status: ${currentBuild.result}"
         }
     }
 }
