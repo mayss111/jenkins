@@ -1,8 +1,15 @@
 pipeline {
     agent any
 
+    environment {
+        REGISTRY = "docker.io"
+        IMAGE_NAME = "mayss111/studentsmanagement"
+        IMAGE_TAG = "latest"
+        DOCKER_CREDENTIALS = 'docker-hub-credentials'
+    }
+
     triggers {
-        githubPush()       // déclenche à chaque push
+        githubPush() // déclenche à chaque push
     }
 
     stages {
@@ -12,31 +19,19 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Clean Workspace') {
             steps {
+                echo "🧹 Nettoyage du workspace..."
+                sh 'git clean -fdx'
+            }
+        }
+
+        stage('Build Maven') {
+            steps {
+                echo "📦 Construction du projet Maven..."
                 script {
                     try {
                         sh 'mvn clean package -DskipTests'
                     } catch (err) {
                         echo "Maven a échoué, mais on continue"
-                        currentBuild.result = 'FAILURE'
-                    }
-                }
-            }
-        }
-
-        stage('Docker') {
-            steps {
-                echo "Docker build & push..."
-                sh 'docker build -t mayss111/studentsmanagement:latest . || echo "Docker build échoué"'
-                sh 'docker push mayss111/studentsmanagement:latest || echo "Docker push échoué"'
-            }
-        }
-    }
-
-    post {
-        always {
-            echo "Pipeline terminée avec status: ${currentBuild.result}"
-        }
-    }
-}
+                        currentBuild.re
