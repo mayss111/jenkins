@@ -1,77 +1,21 @@
 pipeline {
     agent any
 
-    environment {
-        REGISTRY = "mayss111"
-        IMAGE_NAME = "alpine"
-        IMAGE_TAG = "latest"
-        DOCKERHUB_CREDENTIALS = "dockerhub-cred"   // Nom dans Jenkins Credentials
-    }
-
     triggers {
-        // Vérifie chaque 1 minute s'il y a un nouveau commit
-        pollSCM('*/1 * * * *')
+        githubPush()
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/mayss111/jenkins.git'
+                git url: 'https://github.com/mayss111/jenkins.git', branch: 'main'
             }
         }
 
-        stage('Clean + Build Maven') {
+        stage('Build') {
             steps {
-                sh "mvn clean install -DskipTests"
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh "mvn test"
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    sh """
-                        docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} .
-                    """
-                }
-            }
-        }
-
-        stage('Login Docker Hub') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}",
-                            usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        sh """
-                            echo "$PASS" | docker login -u "$USER" --password-stdin
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                sh "docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-            }
-        }
-
-        stage('Deploy container') {
-            steps {
-                sh """
-                    docker rm -f student-app || true
-                    docker run -d --name student-app -p 8080:8080 ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
-                """
+                sh 'mvn clean install'
             }
         }
     }
 }
-
-
-
