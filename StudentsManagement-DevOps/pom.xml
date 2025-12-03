@@ -18,8 +18,13 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+    <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.0</version> <!-- ou la version que tu utilises -->
+</parent>
 
-    <dependencies>
+<dependencies>
         <!-- Exemple : dépendance JUnit pour tests -->
         <dependency>
             <groupId>junit</groupId>
@@ -27,7 +32,31 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
-        <!-- Ajoute ici tes autres dépendances si nécessaire -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+
+    <!-- Spring Boot Starter JPA -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!-- Lombok -->
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.30</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <!-- H2 Database pour tests si besoin -->
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>runtime</scope>
+    </dependency><!-- Ajoute ici tes autres dépendances si nécessaire -->
     </dependencies>
 
     <build>
