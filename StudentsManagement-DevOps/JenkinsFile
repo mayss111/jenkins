@@ -35,3 +35,7 @@ pipeline {
                     } catch (err) {
                         echo "Maven a échoué, mais on continue"
                         currentBuild.re
+
+
+
+
