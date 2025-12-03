@@ -2,40 +2,76 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = "docker.io"
-        IMAGE_NAME = "mayss111/studentsmanagement"
+        REGISTRY = "mayss111"
+        IMAGE_NAME = "alpine"
         IMAGE_TAG = "latest"
-        DOCKER_CREDENTIALS = 'docker-hub-credentials'
+        DOCKERHUB_CREDENTIALS = "dockerhub-cred"   // Nom dans Jenkins Credentials
     }
 
     triggers {
-        githubPush() // déclenche à chaque push
+        // Vérifie chaque 1 minute s'il y a un nouveau commit
+        pollSCM('*/1 * * * *')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main',
+                    url: 'https://github.com/mayss111/jenkins.git'
             }
         }
 
-        stage('Clean Workspace') {
+        stage('Clean + Build Maven') {
             steps {
-                echo "🧹 Nettoyage du workspace..."
-                sh 'git clean -fdx'
+                sh "mvn clean install -DskipTests"
             }
         }
 
-        stage('Build Maven') {
+        stage('Run Tests') {
             steps {
-                echo "📦 Construction du projet Maven..."
+                sh "mvn test"
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
                 script {
-                    try {
-                        sh 'mvn clean package -DskipTests'
-                    } catch (err) {
-                        echo "Maven a échoué, mais on continue"
-                        currentBuild.re
+                    sh """
+                        docker build -t ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} .
+                    """
+                }
+            }
+        }
 
+        stage('Login Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}",
+                            usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh """
+                            echo "$PASS" | docker login -u "$USER" --password-stdin
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh "docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Deploy container') {
+            steps {
+                sh """
+                    docker rm -f student-app || true
+                    docker run -d --name student-app -p 8080:8080 ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                """
+            }
+        }
+    }
+}
 
 
 
