@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         IMAGE_NAME = "mayss111/alpine"
+        TAG = "latest"
     }
 
     stages {
@@ -26,7 +27,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                       docker build -t ${IMAGE_NAME}:latest StudentsManagement-DevOps
+                       docker build -t ${IMAGE_NAME}:${TAG} StudentsManagement-DevOps
                     """
                 }
             }
@@ -37,7 +38,7 @@ pipeline {
                 script {
                     sh """
                        echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
-                       docker push ${IMAGE_NAME}:latest
+                       docker push ${IMAGE_NAME}:${TAG}
                     """
                 }
             }
