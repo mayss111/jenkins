@@ -2,16 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
-        IMAGE_NAME = "mayss111/alpine"
-        TAG = "latest"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // ID des credentials Docker Hub dans Jenkins
+        IMAGE_NAME = 'mayss111/alpine:latest'
     }
 
     stages {
-
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
-                git branch: 'main', url: 'https://github.com/mayss111/jenkins.git'
+                checkout scm
             }
         }
 
@@ -26,9 +24,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    sh """
-                       docker build -t ${IMAGE_NAME}:${TAG} StudentsManagement-DevOps
-                    """
+                    sh "docker build -t ${IMAGE_NAME} StudentsManagement-DevOps"
                 }
             }
         }
@@ -37,11 +33,20 @@ pipeline {
             steps {
                 script {
                     sh """
-                       echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
-                       docker push ${IMAGE_NAME}:${TAG}
+                        echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
+                        docker push ${IMAGE_NAME}
                     """
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline terminée avec succès !'
+        }
+        failure {
+            echo 'La pipeline a échoué. Vérifie les logs !'
         }
     }
 }
