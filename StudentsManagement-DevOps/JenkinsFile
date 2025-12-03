@@ -21,15 +21,17 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'mvn clean package'
+                        dir('StudentsManagement-DevOps') {
+                            sh 'mvn clean package'
+                        }
                     } catch (err) {
                         echo "Maven build failed: ${err}"
                         currentBuild.result = 'FAILURE'
-                        // continue pour Docker malgré l'échec
                     }
                 }
             }
         }
+
 
         stage('Docker Build & Push') {
             when {
