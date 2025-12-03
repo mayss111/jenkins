@@ -26,6 +26,7 @@ pipeline {
                         }
                     } catch (err) {
                         echo "Maven build failed: ${err}"
+
                         currentBuild.result = 'FAILURE'
                     }
                 }
