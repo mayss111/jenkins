@@ -5,16 +5,44 @@ pipeline {
         githubPush()
     }
 
+    environment {
+        DOCKER_IMAGE = "mayss111/alpine"
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/mayss111/jenkins.git', branch: 'main'
             }
         }
 
-        stage('Build') {
+        stage('Build Maven') {
             steps {
-                sh 'mvn clean install'
+                dir('StudentsManagement-DevOps') {
+                    sh 'mvn clean install -DskipTests'
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                script {
+                    sh """
+                        docker build -t ${DOCKER_IMAGE}:latest StudentsManagement-DevOps
+                    """
+                }
+            }
+        }
+
+        stage('Docker Login & Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh """
+                        echo "$PASS" | docker login -u "$USER" --password-stdin
+                        docker push ${DOCKER_IMAGE}:latest
+                    """
+                }
             }
         }
     }
