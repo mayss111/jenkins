@@ -3,9 +3,10 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                git 'https://github.com/mayss111/jenkins'
+                git branch: 'main', url: 'https://github.com/mayss111/jenkins.git'
             }
         }
+
         stage('Build Maven') {
             steps {
                 sh 'mvn clean package'
