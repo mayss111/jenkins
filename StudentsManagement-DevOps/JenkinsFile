@@ -10,11 +10,14 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    docker.build('mayss111/alpine:latest').push()
+                    docker.build("mayss111/studentsmanagement:latest")
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        docker.image("mayss111/studentsmanagement:latest").push()
+                    }
                 }
             }
         }
-    }
+
     post {
         always {
             echo 'Pipeline terminée.'
