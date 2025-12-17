@@ -44,7 +44,7 @@ pipeline {
             steps {
                 dir('StudentsManagement-DevOps/k8s') {
                     // Applique ton deployment.yaml et service.yaml si tu en as un
-                    sh 'kubectl apply -f deployment.yaml'
+                    sh 'kubectl apply -f k8s/deployment.yaml'
                     sh 'kubectl apply -f service.yaml || echo "Service.yaml non trouvé, skipping..."'
                 }
             }
