@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // ID des credentials Docker Hub dans Jenkins
-        IMAGE_NAME = 'mayss111/alpine:latest'
+        IMAGE_NAME = 'mayss111/students-management:latest'
     }
 
     stages {
@@ -16,15 +16,36 @@ pipeline {
         stage('Build Maven') {
             steps {
                 dir('StudentsManagement-DevOps') {
-                    sh 'mvn clean install -DskipTests'
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
 
         stage('Docker Build') {
             steps {
+                dir('StudentsManagement-DevOps') {
+                    sh "docker build -t ${IMAGE_NAME} ."
+                }
+            }
+        }
+
+        stage('Load Image to Minikube') {
+            steps {
                 script {
-                    sh "docker build -t ${IMAGE_NAME} StudentsManagement-DevOps"
+                    // Vérifie si minikube est accessible
+                    sh "minikube status || exit 1"
+                    // Charge l'image dans Minikube
+                    sh "minikube image load ${IMAGE_NAME}"
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                dir('StudentsManagement-DevOps/k8s') {
+                    // Applique ton deployment.yaml et service.yaml si tu en as un
+                    sh 'kubectl apply -f deployment.yaml'
+                    sh 'kubectl apply -f service.yaml || echo "Service.yaml non trouvé, skipping..."'
                 }
             }
         }
@@ -50,5 +71,3 @@ pipeline {
         }
     }
 }
-
-

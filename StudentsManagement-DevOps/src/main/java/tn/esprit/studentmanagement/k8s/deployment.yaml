@@ -16,9 +16,13 @@ spec:
     spec:
       containers:
         - name: students-management
-          image: students-management:latest
+          image: mayss111/students-management:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "dev"
 ---
 apiVersion: v1
 kind: Service
@@ -27,8 +31,10 @@ metadata:
 spec:
   selector:
     app: students-management
+  type: NodePort
   ports:
     - protocol: TCP
-      port: 80
+      port: 8080
       targetPort: 8080
-  type: NodePort
+      nodePort: 30007  # port accessible via Minikube IP
+
