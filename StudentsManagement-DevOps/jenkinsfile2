@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+
+    environment {
+        SONAR_TOKEN = credentials('sonar_token') // ID du token SonarQube dans Jenkins
+    }
+
+    stages {
+        stage('Maven SonarQube Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        sh """
+                            mvn sonar:sonar \
+                            -Dsonar.projectKey=StudentsManagement-DevOps \
+                            -Dsonar.login=${SONAR_TOKEN}
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
