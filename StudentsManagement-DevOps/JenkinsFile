@@ -4,12 +4,15 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // ID des credentials Docker Hub dans Jenkins
         IMAGE_NAME = 'mayss111/students-management:latest'
+        SONAR_TOKEN = credentials('sonar_token') // use straight single quotes
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
                 checkout scm
+                 git branch: 'main', url: 'https://github.com/mayss111/jenkins.git'
+
             }
         }
 
@@ -40,6 +43,7 @@ pipeline {
             }
         }
 
+
         stage('Deploy to Kubernetes') {
             steps {
                 dir('StudentsManagement-DevOps/k8s') {
@@ -60,6 +64,19 @@ pipeline {
                 }
             }
         }
+        stage('Maven SonarQube Analysis') {
+                    steps {
+                        script {
+                            withSonarQubeEnv('SonarQube') {
+                                sh """
+                                    mvn sonar:sonar \
+                                    -Dsonar.projectKey=StudentsManagement-DevOps \
+                                    -Dsonar.login=${SONAR_TOKEN}
+                                """
+                            }
+                        }
+                    }
+                }
     }
 
     post {
