@@ -6,14 +6,21 @@ pipeline {
     }
 
     stages {
+        stage('Checkout Project') {
+            steps {
+                git branch: 'main', url: 'https://github.com/mayss111/jenkinsfile/StudentsManagement-DevOps.git'
+            }
+        }
+
         stage('Maven SonarQube Analysis') {
             steps {
                 script {
                     withSonarQubeEnv('SonarQube') {
                         sh """
-                            mvn sonar:sonar \
+                            mvn clean package -DskipTests sonar:sonar \
                             -Dsonar.projectKey=StudentsManagement-DevOps \
-                            -Dsonar.login=${SONAR_TOKEN}
+                            -Dsonar.login=${SONAR_TOKEN} \
+                            -Dsonar.java.binaries=target/classes
                         """
                     }
                 }
